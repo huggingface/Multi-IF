@@ -71,7 +71,7 @@ def main(
 
     for language in languages:
         logger.info(f"Evaluating language: {language}")
-        dataset = load_dataset("HuggingFaceTB/Multi-IF", language, split="train[:2]")
+        dataset = load_dataset("HuggingFaceTB/Multi-IF", language, split="train")
         benchmark_df = dataset.to_pandas()
         num_rows = len(benchmark_df)
         logger.info(f"Number of rows: {num_rows}")
