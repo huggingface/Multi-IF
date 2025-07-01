@@ -25,6 +25,13 @@ from dataclasses import dataclass
 from vllm import LLM
 from vllm.sampling_params import SamplingParams
 
+from lighteval.utils.utils import remove_reasoning_tags
+
+
+REASONING_TAG_PAIRS = [
+    ("<think>", "</think>"),
+]
+
 logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
@@ -141,7 +148,7 @@ def get_inference_batch_vllm(
     for batch in np.array_split(output_df, num_split):
         logger.info(f"Processing {len(batch)} input rows.")
         chat = batch["multi_turn_prompt_column"].tolist()
-                
+
         # Add system prompt if provided
         if system_prompt:
             for conversation in chat:
@@ -167,6 +174,8 @@ def get_inference_batch_vllm(
 
         for index, gen_output in zip(batch.index, generation_outputs):
             decoded_output = gen_output.outputs[0].text
+            # Remove reasoning tags to avoid false negatives in evaluation
+            decoded_output = remove_reasoning_tags(decoded_output, tag_pairs=REASONING_TAG_PAIRS).strip()
             output_df.loc[index, "turns"] = json.dumps(batch.loc[index, "multi_turn_prompt_column"])
             output_df.loc[index, "responses"] = decoded_output.strip()
 
