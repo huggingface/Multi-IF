@@ -4,3 +4,5 @@ Meta-Llama-3.1-70B-Instruct/
 __pycache__/
 
 data/
+eval_results/
+results/

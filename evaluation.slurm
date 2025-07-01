@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --job-name=smollm3-multi-if
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:8
 #SBATCH --partition=hopper-prod
@@ -26,7 +27,7 @@ SCRIPT_START_TIME=$(date +%s)
 echo "Evaluation started at: $(date)"
 
 source ~/.bashrc
-source trl-internal/bin/activate
+source /fsx/lewis/git/hf/trl-internal/trl-internal/bin/activate
 
 TASK_NAME="multi_if"
 
@@ -50,17 +51,21 @@ NUM_GPUS=$(nvidia-smi -L | wc -l)
 echo "Running VLLM script ..."
 echo "Eval results will be saved to $OUTPUT_DIR"
 # Env var needed to handle https://github.com/vllm-project/vllm/issues/6152
-VLLM_WORKER_MULTIPROC_METHOD=spawn python examples/smollm3/scripts/alpaca_eval/generate_vllm.py --model_name_or_path $MODEL_ID --model_revision $MODEL_REVISION \
-    --tp $NUM_GPUS \
-    --trust_remote_code $TRUST_REMOTE_CODE \
-    --dataset_name tatsu-lab/alpaca_eval \
-    --dataset_split eval \
-    --prompt_column instruction \
-    --max_new_tokens 32768 \
-    --temperature 0.6 \
-    --top_p 0.95 \
-    --output_dir $OUTPUT_DIR \
-    ${5:+--system-prompt "$(echo "$5" | base64 --decode)"}
+VLLM_WORKER_MULTIPROC_METHOD=spawn python multi_turn_instruct_following_eval_vllm.py  --model_path $MODEL_ID --revision $MODEL_REVISION \
+    --languages Spanish French Italian Portuguese  \
+    --tensor_parallel_size $NUM_GPUS \
+    --output_dir $OUTPUT_DIR
+# VLLM_WORKER_MULTIPROC_METHOD=spawn python examples/smollm3/scripts/alpaca_eval/generate_vllm.py --model_name_or_path $MODEL_ID --model_revision $MODEL_REVISION \
+#     --tp $NUM_GPUS \
+#     --trust_remote_code $TRUST_REMOTE_CODE \
+#     --dataset_name tatsu-lab/alpaca_eval \
+#     --dataset_split eval \
+#     --prompt_column instruction \
+#     --max_new_tokens 32768 \
+#     --temperature 0.6 \
+#     --top_p 0.95 \
+#     --output_dir $OUTPUT_DIR \
+#     ${5:+--system-prompt "$(echo "$5" | base64 --decode)"}
 
 OUTPUT_FILEPATHS=$(find $OUTPUT_DIR/ -type f -name "*result*.json")
 for filepath in $OUTPUT_FILEPATHS; do

@@ -41,7 +41,7 @@ def main(
     languages: list[str] = ["English", "Spanish"],
     batch_size=256,
     generation_setting=GenerationSetting(
-        max_new_tokens=1024, temperature=0.6, top_p=0.95
+        max_new_tokens=32768, temperature=0.6, top_p=0.95
     ),
     need_write2file: bool = False,
     output_dir: str = "data",
@@ -70,7 +70,7 @@ def main(
 
     for language in languages:
         logger.info(f"Evaluating language: {language}")
-        dataset = load_dataset("HuggingFaceTB/Multi-IF", language, split="train[:4]")
+        dataset = load_dataset("HuggingFaceTB/Multi-IF", language, split="train")
         benchmark_df = dataset.to_pandas()
         num_rows = len(benchmark_df)
         logger.info(f"Number of rows: {num_rows}")
