@@ -46,14 +46,15 @@ python multi_turn_instruct_following_eval_vllm.py \
 ```
 This will execute the multi-turn evaluation benchmar and output the results to the console and intermediate generation results saved in csv files.
 
-For example, for Meta-Llama-3.1-70B-Instruct,
+For example, for Meta-Llama-3.1-8B-Instruct,
+
 ```bash
 python multi_turn_instruct_following_eval_vllm.py \
-        --model_path meta-llama/Llama-3.1-70B-Instruct \
-        --tokenizer_path meta-llama/Llama-3.1-70B-Instruct \
+        --model_path meta-llama/Llama-3.1-8B-Instruct \
+        --tokenizer_path meta-llama/Llama-3.1-8B-Instruct \
         --input_data_csv data/Multi-IF/multiIF_20241018.csv \
         --batch_size 4 \
-        --tensor_parallel_size 8
+        --tensor_parallel_size 1
 ```
 
 Or for running evaluation via API please use
