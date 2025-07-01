@@ -48,6 +48,7 @@ def main(
     output_filepath_prefix: str = "eval_result",
     tensor_parallel_size: int = 8,
     steps: List[int] = [1, 2, 3],
+    system_prompt: str = "",
 ) -> None:
     tokenizer = AutoTokenizer.from_pretrained(model_path, revision=revision, padding_side="left")
     tokenizer.pad_token = tokenizer.eos_token
@@ -70,7 +71,7 @@ def main(
 
     for language in languages:
         logger.info(f"Evaluating language: {language}")
-        dataset = load_dataset("HuggingFaceTB/Multi-IF", language, split="train")
+        dataset = load_dataset("HuggingFaceTB/Multi-IF", language, split="train[:2]")
         benchmark_df = dataset.to_pandas()
         num_rows = len(benchmark_df)
         logger.info(f"Number of rows: {num_rows}")
@@ -97,6 +98,7 @@ def main(
                 device=0,
                 generation_setting=generation_setting,
                 batch_size=batch_size,
+                system_prompt=system_prompt if step == 1 else "",  # Only add system prompt for the first step
             )
             step_input_df = step_output_df.copy()
             step_metric_result = run_metric(
@@ -134,7 +136,8 @@ def run_step(
     output_filepath: str = "eval_result.csv",
     device: Optional[str] = None,
     generation_setting: GenerationSetting = GenerationSetting(),
-    batch_size: int = 256
+    batch_size: int = 256,
+    system_prompt: str = "",
 ) -> pd.DataFrame:
     output_df = preprocess_data(
         input_df, prompt_columns=prompt_columns, row_limit=row_limit
@@ -148,6 +151,7 @@ def run_step(
         need_write2file=need_write2file,
         output_filepath=output_filepath,
         device=device,
+        system_prompt=system_prompt,
     )
     return step_output_df
 
@@ -211,6 +215,12 @@ if __name__ == "__main__":
         default=[1, 2, 3],
         help='List of steps to process (e.g., --steps 1 2 3)'
     )
+    parser.add_argument(
+        "--system_prompt", 
+        type=str, 
+        default="", 
+        help="System prompt to add as the first message in conversations"
+    )
     args = parser.parse_args()
     main(
         model_path=args.model_path,
@@ -221,5 +231,6 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         output_filepath_prefix=args.output_filepath_prefix,
         tensor_parallel_size=args.tensor_parallel_size,
-        steps=args.steps
+        steps=args.steps,
+        system_prompt=args.system_prompt,
     )

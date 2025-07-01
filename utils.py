@@ -35,7 +35,7 @@ class GenerationSetting:
     top_p: float = 0.9
     seed: int = 42
 
-def get_inference_batch(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase, input_df: pd.DataFrame, batch_size: int = 24, generation_setting: GenerationSetting = GenerationSetting(), need_write2file: bool = True, output_filepath: str = "generation_output.csv", device: Optional[str] = None)-> pd.DataFrame:
+def get_inference_batch(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase, input_df: pd.DataFrame, batch_size: int = 24, generation_setting: GenerationSetting = GenerationSetting(), need_write2file: bool = True, output_filepath: str = "generation_output.csv", device: Optional[str] = None, system_prompt: str = "")-> pd.DataFrame:
     """
         generate inference result given pre-trained model, tokenizer, and input dataframe
         the result will be written to the output_filepath if defined. by default, it will return 
@@ -62,6 +62,12 @@ def get_inference_batch(model: PreTrainedModel, tokenizer: PreTrainedTokenizerBa
     for batch in np.array_split(output_df, num_split):
         logger.info(f"processing {len(batch)} input row. ")
         chat = batch["multi_turn_prompt_column"].tolist() 
+        
+        # Add system prompt if provided
+        if system_prompt:
+            for conversation in chat:
+                conversation.insert(0, {"role": "system", "content": system_prompt})
+        
         # 2: Apply the chat template
         formatted_chat = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
 
@@ -103,6 +109,7 @@ def get_inference_batch_vllm(
     need_write2file: bool = True,
     output_filepath: str = "generation_output.csv",
     device: Optional[str] = None,
+    system_prompt: str = "",
 ) -> pd.DataFrame:
     """
     Generate inference results using vllm for faster generation.
@@ -134,6 +141,11 @@ def get_inference_batch_vllm(
     for batch in np.array_split(output_df, num_split):
         logger.info(f"Processing {len(batch)} input rows.")
         chat = batch["multi_turn_prompt_column"].tolist()
+                
+        # Add system prompt if provided
+        if system_prompt:
+            for conversation in chat:
+                conversation.insert(0, {"role": "system", "content": system_prompt})
 
         try:
             formatted_chat = tokenizer.apply_chat_template(
