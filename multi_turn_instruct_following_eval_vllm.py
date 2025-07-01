@@ -134,7 +134,7 @@ def run_step(
     output_filepath: str = "eval_result.csv",
     device: Optional[str] = None,
     generation_setting: GenerationSetting = GenerationSetting(),
-    batch_size: int = 24
+    batch_size: int = 256
 ) -> pd.DataFrame:
     output_df = preprocess_data(
         input_df, prompt_columns=prompt_columns, row_limit=row_limit
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         "--revision", type=str, default="main"
     )
     parser.add_argument("--languages", type=str, nargs='+', default=["English", "Spanish"])
-    parser.add_argument("--batch_size", type=int, default=24)
+    parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--need_write2file", type=bool, default=True)
     parser.add_argument("--output_filepath_prefix", type=str, default="eval_result")
     parser.add_argument(
